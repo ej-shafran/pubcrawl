@@ -8,7 +8,8 @@
     "build": "npx rimraf ./dist && npx tsc",
     "change-name": "cd dist && npm pkg set name='pubcrawl' && cd ..",
     "copy": "cp ./package.json ./dist/package.json && cp ./README.md ./dist/README.md",
-    "postbuild": "npm run copy && npm run change-name"
+    "postbuild": "npm run copy && npm run change-name",
+    "prebuild": "npm run test"
   },
   "repository": {
     "type": "git",
