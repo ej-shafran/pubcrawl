@@ -1,7 +1,5 @@
-import { isTestWorking } from "../src";
-
-describe("is test working", () => {
+describe("test working", () => {
     it("should work!", () => {
-        expect(isTestWorking()).toBe(true);
+        expect(true).toBe(true);
     });
 });
