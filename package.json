@@ -1,13 +1,13 @@
 {
-  "name": "pubcrawl-src",
+  "name": "pubhop-src",
   "version": "0.0.1-alpha",
   "description": "A library that simplifies the pub-sub model for TypeScript and JavaScript",
   "main": "index.js",
   "scripts": {
     "test": "jest",
     "build": "npx rimraf ./dist && npx tsc",
-    "change-name": "cd dist && npm pkg set name='pubcrawl' && cd ..",
-    "copy": "cp ./package.json ./dist/package.json && cp ./README.md ./dist/README.md",
+    "change-name": "cd dist && npm pkg set name='pubhop' && cd ..",
+    "copy": "cp ./package.json ./dist/package.json && cp ./README.md ./dist/README.md && cp ./.npmrc ./dist/.npmrc",
     "postbuild": "npm run copy && npm run change-name",
     "prebuild": "npm run test"
   },
