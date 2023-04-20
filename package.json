@@ -9,7 +9,8 @@
     "change-name": "cd dist && npm pkg set name='pubhop' && cd ..",
     "copy": "cp ./package.json ./dist/package.json && cp ./README.md ./dist/README.md && cp ./.npmrc ./dist/.npmrc",
     "postbuild": "npm run copy && npm run change-name",
-    "prebuild": "npm run test"
+    "prebuild": "npm run test",
+    "test:watch": "jest --watch"
   },
   "repository": {
     "type": "git",

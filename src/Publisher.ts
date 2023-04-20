@@ -16,4 +16,8 @@ export class Publisher<TData> {
             cb(data);
         });
     }
+
+    clear() {
+        this.#subscribers.clear();
+    }
 }
