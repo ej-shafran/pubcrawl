@@ -41,10 +41,19 @@ export class Publisher<TData> {
   #subscribers = new Set<Subscription<TData>>();
 
   /**
+   * Keeps track of subscribers and notifies them whenever necessary (i.e. - when the `publish` method is called).
+   * A Publisher does not keep track of the data it has published; see Store for that functionality.
+   *
+   * If the `TData` type param is a function, the subscribers will expect that function's parameters.
+   * Otherwise, they will expect `TData` itself.
+   **/
+  constructor() { }
+
+  /**
    * Add a new subscriber.
    *
    * @param cb Will be called whenever new data is published.
-   * 
+   *
    * @returns An `unsubscribe` function that removes this subscriber.
    *
    * @example
@@ -104,4 +113,3 @@ export class Publisher<TData> {
     this.#subscribers.clear();
   }
 }
-
