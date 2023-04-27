@@ -3,15 +3,15 @@ import { Subscription } from "./Subscription";
 
 export class Store<TData> {
     #publisher = new Publisher<TData>();
-    #value: TData | undefined;
+    #value: Parameters<Subscription<TData>> | [];
 
-    constructor(initialValue?: TData) {
-        this.#value = initialValue;
+    constructor(...args: Parameters<Subscription<TData>> | []) {
+        this.#value = args;
     }
 
-    set(newValue: TData) {
-        this.#value = newValue;
-        this.#publisher.publish(newValue);
+    set(...args: Parameters<Subscription<TData>>) {
+        this.#value = args;
+        this.#publisher.publish(...args);
     }
 
     get() {
