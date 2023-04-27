@@ -1,32 +1,30 @@
 import { Publisher } from "./Publisher";
 import { Subscription } from "./Subscription";
+import { TypedMap } from "./TypedMap";
+import { valueof } from "./common/types/valueof";
 
-export class Network {
-    #publishers = new Map<string, Publisher<any>>();
-    #followers = new Publisher<unknown>();
+type PublishersForObject<T> = {
+  [P in keyof T]: Publisher<T[P]>;
+}
 
-    #handleKey = (key: string | string[]): string => {
-        if (typeof key === "string") return key.split(",").join("|");
+export class Network<T> {
+    #publishers = new TypedMap<PublishersForObject<T>>();
+    #followers = new Publisher<valueof<T>>();
 
-        return key.map((str) => str.split(",").join("|")).join(",");
-    };
-
-    subscribe<TData>(key: string | string[], cb: Subscription<TData>) {
-        const parsed = this.#handleKey(key);
-        if (!this.#publishers.has(parsed)) {
-            const publisher = new Publisher<TData>();
+    subscribe<K extends keyof T>(key: K, cb: Subscription<T[K]>) {
+        if (!this.#publishers.has(key)) {
+            const publisher = new Publisher<T[K]>();
             const unsub = publisher.subscribe(cb);
-            this.#publishers.set(parsed, publisher);
+            this.#publishers.set(key, publisher);
             return unsub;
         } else {
-            const publisher = this.#publishers.get(parsed) as Publisher<TData>;
+            const publisher = this.#publishers.get(key);
             return publisher.subscribe(cb);
         }
     }
 
-    publish<TData>(key: string | string[], value: TData) {
-        const parsed = this.#handleKey(key);
-        const publisher = this.#publishers.get(parsed) as Publisher<TData> | undefined;
+    publish<K extends keyof T>(key: K, value: T[K]) {
+        const publisher = this.#publishers.get(key);
         publisher?.publish(value);
         this.#followers.publish(value);
     }

@@ -1,7 +1,14 @@
 import { Network } from "../src";
 
+type TestingEvents = {
+  "test-a": string;
+  "test-b": number;
+  "test-c": number;
+  "test-d": [string, string];
+}
+
 describe("Network", () => {
-    const network = new Network();
+    const network = new Network<TestingEvents>();
 
     beforeEach(() => {
         network.clear();
@@ -9,76 +16,49 @@ describe("Network", () => {
 
     describe("Network#subscribe", () => {
         it("should subscribe to a specific key", () => {
-            network.subscribe<string>("test-a", (data) => {
+            network.subscribe("test-a", (data) => {
                 expect(typeof data).toBe("string");
             });
 
             network.publish("test-a", "TESTING");
         });
 
-        it("should allow an array of strings as a key", () => {
-            network.subscribe<{ name: string }>(["test-b", "test-c"], (data) => {
-                expect(data).toEqual({ name: "TESTING" });
-            });
+        it("should return a callback function", () => {
+          const spy = jest.fn();
 
-            network.publish(["test-b", "test-c"], { name: "TESTING" });
-        });
+          const unsub = network.subscribe("test-b", (data) => {
+            expect(typeof data).toBe("number");
+            spy(data);
+          });
 
-        it("should allow multiple subscribers for the same key", () => {
-            const accumulator: string[] = [];
+          expect(unsub).toBeInstanceOf(Function);
+          
+          network.publish("test-b", 10);
+          unsub();
+          network.publish("test-b", 11);
 
-            network.subscribe<string>(["test-d", "test-e"], (data) => {
-                accumulator.push(data);
-            });
-            network.subscribe<string>(["test-d", "test-e"], (data) => {
-                accumulator.push(data);
-            });
-
-            network.publish(["test-d", "test-e"], "foo");
-
-            expect(accumulator).toHaveLength(2);
-        });
-
-        it("should allow commas within a string without confusion", () => {
-            const accumulator: string[] = [];
-
-            network.subscribe<string>(["test-f", "test-g"], (data) => {
-                accumulator.push(data);
-            });
-
-            network.subscribe<{ name: string }>("test-f,test-g", (data) => {
-                accumulator.push(data.name);
-            });
-
-            network.publish("test-f,test-g", { name: "foo" });
-
-            expect(accumulator).toHaveLength(1);
-        });
-
-        it("should return a callback", () => {
-            const unsub = network.subscribe("test-h", () => {});
-
-            expect(unsub).toBeInstanceOf(Function); });
+          expect(spy).toHaveBeenCalledTimes(1);
+        })
     });
 
     describe("Network#publish", () => {
         it("should publish to specific keys", () => {
             let counter = 0;
 
-            network.subscribe<number>("test-i", (data) => {
+            network.subscribe("test-c", (data) => {
                 counter += data;
             });
 
-            network.publish("test-i", 3);
+            network.publish("test-c", 3);
 
             expect(counter).toBe(3);
 
-            network.subscribe<string[]>("test-j", (data) => {
+            network.subscribe("test-d", (data) => {
                 expect(data).toBeInstanceOf(Array);
                 expect(data).toHaveLength(2);
             });
 
-            network.publish("test-j", ["TESTING", "TESTING"]);
+            network.publish("test-d", ["TESTING", "TESTING"]);
         });
     });
 
@@ -90,14 +70,12 @@ describe("Network", () => {
                 followerAcc.push(data);
             });
 
-            network.subscribe("test-k", () => {});
-            network.subscribe("test-l", () => {});
-            network.subscribe("test-m", () => {});
-            network.publish("test-k", "hi");
-            network.publish("test-l", "hi");
-            network.publish("test-m", "hi");
+            network.publish("test-a", "TESTING");
+            network.publish("test-b", 10);
+            network.publish("test-c", 20);
+            network.publish("test-d", ["TESTING", "TESTING"])
 
-            expect(followerAcc).toHaveLength(3);
+            expect(followerAcc).toHaveLength(4);
         });
     });
 });
