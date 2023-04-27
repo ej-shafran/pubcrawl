@@ -60,7 +60,7 @@ export class Network<TData> {
   constructor() { }
 
   /**
-   * Add a new subscriber.
+   * Add a new subscriber to a specific key.
    *
    * @param key The specific key, A.K.A "event" or "channel" to subscribe to.
    * @param cb Will be called whenever new data is published to the channel specified by `key`.
