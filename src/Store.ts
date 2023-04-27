@@ -4,6 +4,38 @@ import { Subscription } from "./Subscription";
 /**
  * Keeps track of the currently held data (as a tuple, since it's passed to callbacks by spreading),
  * and updates its subscribers whenever that data is changed.
+ *
+ * @example
+ * type Person = {
+ *   name: string;
+ *   age: number;
+ * }
+ *
+ * const store = new Store<Person>();
+ *
+ * const unsub = store.subscribe((person) => {
+ *   // do stuff with the `person` here
+ * });
+ *
+ * // update the internal state and notify all subscribers
+ * store.set({ name: "Evyatar", age: 19 });
+ *
+ * // get the current state within an array
+ * const [person] = store.get();
+ *
+ * // remove the subscriber we set up
+ * unsub();
+ *
+ * // if `TData` is a function...
+ * const store = new Store<(person: Person, isCool: boolean) => void>();
+ * // we'll be expected to pass the parameters of `TData`
+ * store.set({ name: "Evyatar", age: 19 }, true);
+ * // and that's also what `subscribe`'s callbacks will get
+ * store.subscribe((person, isCool) => {
+ *   // do stuff here...
+ * })
+ * // and what `get` will return
+ * const [person, isCool] = store.get();
  **/
 export class Store<TData> {
   #publisher = new Publisher<TData>();
@@ -95,7 +127,7 @@ export class Store<TData> {
    *
    * // any `set` calls here will trigger our `console.log`...
    * unsub();
-   * // but any `set` calls from here will not
+   * // but any `set` calls from here on out will not
    **/
   subscribe(cb: Subscription<TData>) {
     return this.#publisher.subscribe(cb);

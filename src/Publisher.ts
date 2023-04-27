@@ -71,7 +71,7 @@ export class Publisher<TData> {
    *
    * // any `publish` calls here will trigger our `console.log`...
    * unsub();
-   * // but any `publish` calls from here will not
+   * // but any `publish` calls from here on out will not
    **/
   subscribe(cb: Subscription<TData>) {
     this.#subscribers.add(cb);
@@ -84,7 +84,7 @@ export class Publisher<TData> {
   /**
    * Notify all subscribers with some data.
    *
-   * @param params what to call the subscriber callbacks with (i.e. - the data to notify them of)
+   * @param params What to call the subscriber callbacks with (i.e. - the data to notify them of)
    *
    * @example
    * type Person = {
