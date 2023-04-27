@@ -11,7 +11,7 @@ describe("Network", () => {
   const network = new Network<TestingEvents>();
 
   beforeEach(() => {
-    network.clear();
+    network.fullClear();
   });
 
   describe("Network#subscribe", () => {
@@ -74,6 +74,33 @@ describe("Network", () => {
       network.publish("test-d", ["TESTING", "TESTING"]);
 
       expect(spy).toHaveBeenCalledTimes(4);
+    });
+  });
+
+  describe("Network#clear", () => {
+    const spy1 = jest.fn();
+    const spy2 = jest.fn();
+    const spy3 = jest.fn();
+
+    network.subscribe("test-a", spy1);
+    network.subscribe("test-b", spy2);
+    network.follow(spy3);
+
+    network.clear("test-a");
+
+    network.publish("test-a", "TESTING");
+    network.publish("test-b", 10);
+
+    it("should remove all subscribers for the target key", () => {
+      expect(spy1).not.toHaveBeenCalled();
+    });
+
+    it("should not affect any other keys", () => {
+      expect(spy2).toHaveBeenCalledTimes(1);
+    });
+
+    it("should not affect followers", () => {
+      expect(spy3).toHaveBeenCalledTimes(2);
     });
   });
 });
