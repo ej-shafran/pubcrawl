@@ -1,10 +1,14 @@
 import type { valueof } from "./common/types/valueof";
 
 export class TypedMap<T> {
-  #map = new Map<PropertyKey, any>();
+  #map: Map<PropertyKey, any>;
+
+  constructor(initialValues?: Partial<T>) {
+    this.#map = new Map(initialValues ? Object.entries(initialValues) : undefined)
+  }
 
   get<K extends keyof T>(key: K) {
-    return this.#map.get(key) as T[K];
+    return this.#map.get(key) as T[K] | undefined;
   }
 
   set<K extends keyof T>(key: K, value: T[K]) {
