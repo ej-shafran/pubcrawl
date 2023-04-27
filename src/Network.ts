@@ -30,7 +30,7 @@ export class Network<T> {
   }
 
   follow(cb: Subscription<unknown>) {
-    this.#followers.subscribe(cb);
+    return this.#followers.subscribe(cb);
   }
 
   clear() {

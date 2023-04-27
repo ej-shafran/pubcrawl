@@ -5,77 +5,75 @@ type TestingEvents = {
   "test-b": number;
   "test-c": number;
   "test-d": [string, string];
-}
+};
 
 describe("Network", () => {
-    const network = new Network<TestingEvents>();
+  const network = new Network<TestingEvents>();
 
-    beforeEach(() => {
-        network.clear();
+  beforeEach(() => {
+    network.clear();
+  });
+
+  describe("Network#subscribe", () => {
+    it("should subscribe to a specific key", () => {
+      network.subscribe("test-a", (data) => {
+        expect(typeof data).toBe("string");
+      });
+
+      network.publish("test-a", "TESTING");
     });
 
-    describe("Network#subscribe", () => {
-        it("should subscribe to a specific key", () => {
-            network.subscribe("test-a", (data) => {
-                expect(typeof data).toBe("string");
-            });
+    it("should return a callback function", () => {
+      const spy = jest.fn();
 
-            network.publish("test-a", "TESTING");
-        });
+      const unsub = network.subscribe("test-b", (data) => {
+        expect(typeof data).toBe("number");
+        spy(data);
+      });
 
-        it("should return a callback function", () => {
-          const spy = jest.fn();
+      expect(unsub).toBeInstanceOf(Function);
 
-          const unsub = network.subscribe("test-b", (data) => {
-            expect(typeof data).toBe("number");
-            spy(data);
-          });
+      network.publish("test-b", 10);
+      unsub();
+      network.publish("test-b", 11);
 
-          expect(unsub).toBeInstanceOf(Function);
-          
-          network.publish("test-b", 10);
-          unsub();
-          network.publish("test-b", 11);
-
-          expect(spy).toHaveBeenCalledTimes(1);
-        })
+      expect(spy).toHaveBeenCalledTimes(1);
     });
+  });
 
-    describe("Network#publish", () => {
-        it("should publish to specific keys", () => {
-            let counter = 0;
+  describe("Network#publish", () => {
+    it("should publish to specific keys", () => {
+      let counter = 0;
 
-            network.subscribe("test-c", (data) => {
-                counter += data;
-            });
+      network.subscribe("test-c", (data) => {
+        counter += data;
+      });
 
-            network.publish("test-c", 3);
+      network.publish("test-c", 3);
 
-            expect(counter).toBe(3);
+      expect(counter).toBe(3);
 
-            network.subscribe("test-d", (data) => {
-                expect(data).toBeInstanceOf(Array);
-                expect(data).toHaveLength(2);
-            });
+      network.subscribe("test-d", (data) => {
+        expect(data).toBeInstanceOf(Array);
+        expect(data).toHaveLength(2);
+      });
 
-            network.publish("test-d", ["TESTING", "TESTING"]);
-        });
+      network.publish("test-d", ["TESTING", "TESTING"]);
     });
+  });
 
-    describe("Network#follow", () => {
-        it("should follow every result", () => {
-            const followerAcc: unknown[] = [];
+  describe("Network#follow", () => {
+    it("should follow every result", () => {
+      const spy = jest.fn();
 
-            network.follow((data) => {
-                followerAcc.push(data);
-            });
+      network.follow(spy);
 
-            network.publish("test-a", "TESTING");
-            network.publish("test-b", 10);
-            network.publish("test-c", 20);
-            network.publish("test-d", ["TESTING", "TESTING"])
+      network.publish("test-a", "TESTING");
+      network.publish("test-b", 10);
+      network.publish("test-c", 20);
+      network.publish("test-d", ["TESTING", "TESTING"]);
 
-            expect(followerAcc).toHaveLength(4);
-        });
+      expect(spy).toHaveBeenCalledTimes(4);
     });
+  });
 });
