@@ -3,9 +3,9 @@ import { Subscription } from "./Subscription";
 
 export class Store<TData> {
     #publisher = new Publisher<TData>();
-    #value: TData;
+    #value: TData | undefined;
 
-    constructor(initialValue: TData) {
+    constructor(initialValue?: TData) {
         this.#value = initialValue;
     }
 
@@ -22,3 +22,4 @@ export class Store<TData> {
         return this.#publisher.subscribe(cb);
     }
 }
+

@@ -19,7 +19,7 @@ export class Network<T> {
             return unsub;
         } else {
             const publisher = this.#publishers.get(key);
-            return publisher.subscribe(cb);
+            return publisher!.subscribe(cb);
         }
     }
 
