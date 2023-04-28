@@ -9,7 +9,7 @@ describe("Store", () => {
 
   describe("Store#get", () => {
     it("should return the value inside the store", () => {
-      expect(initialValue).toEqual([{ name: "" }]);
+      expect(initialValue).toEqual({ name: "" });
     });
   });
 
@@ -28,7 +28,7 @@ describe("Store", () => {
     store.set({ name: "Evyatar" });
 
     it("should change the value in the store", () => {
-      expect(store.get()).toEqual([{ name: "Evyatar" }]);
+      expect(store.get()).toEqual({ name: "Evyatar" });
     });
 
     it("should call the store's subscribers", () => {

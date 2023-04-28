@@ -1,5 +1,4 @@
 import { Publisher } from "./Publisher";
-import { Subscription } from "./Subscription";
 
 /**
  * Keeps track of the currently held data (as a tuple, since it's passed to callbacks by spreading),
@@ -20,26 +19,16 @@ import { Subscription } from "./Subscription";
  * // update the internal state and notify all subscribers
  * store.set({ name: "Evyatar", age: 19 });
  *
- * // get the current state within an array
- * const [person] = store.get();
+ * // get the current state
+ * const person = store.get();
+ * //      ^? Person | undefined
  *
  * // remove the subscriber we set up
  * unsub();
- *
- * // if `TData` is a function...
- * const store = new Store<(person: Person, isCool: boolean) => void>();
- * // we'll be expected to pass the parameters of `TData`
- * store.set({ name: "Evyatar", age: 19 }, true);
- * // and that's also what `subscribe`'s callbacks will get
- * store.subscribe((person, isCool) => {
- *   // do stuff here...
- * })
- * // and what `get` will return
- * const [person, isCool] = store.get();
  **/
 export class Store<TData> {
-  #publisher = new Publisher<TData>();
-  #value: Parameters<Subscription<TData>> | [];
+  #publisher = new Publisher<(data: TData) => void>();
+  #value: TData | undefined;
 
   /**
    * Keeps track of the currently held data (as a tuple, since it's passed to callbacks by spreading),
@@ -47,8 +36,8 @@ export class Store<TData> {
    *
    * @param args Values to initialize the state with.
    **/
-  constructor(...args: Parameters<Subscription<TData>> | []) {
-    this.#value = args;
+  constructor(initialValue?: TData) {
+    this.#value = initialValue;
   }
 
   /**
@@ -64,13 +53,13 @@ export class Store<TData> {
    *
    * const store = new Store<Person>();
    *
-   * // `data` will be an empty array
-   * let data = store.get();
+   * // `person` will be `undefined`
+   * let person = store.get();
    *
    * store.set({ name: "Evyatar", age: 19 });
    *
-   * // `data` will be `[{ name: "Evyatar", age: 19 }]`
-   * data = store.get();
+   * // `person` will be `{ name: "Evyatar", age: 19 }`
+   * person = store.get();
    **/
   get() {
     return this.#value;
@@ -100,9 +89,9 @@ export class Store<TData> {
    * store.set({ name: "John", age: 27 });
    * store.set({ name: "Doe", age: 51 });
    **/
-  set(...args: Parameters<Subscription<TData>>) {
-    this.#value = args;
-    this.#publisher.publish(...args);
+  set(value: TData) {
+    this.#value = value;
+    this.#publisher.publish(value);
   }
 
   /**
@@ -129,7 +118,8 @@ export class Store<TData> {
    * unsub();
    * // but any `set` calls from here on out will not
    **/
-  subscribe(cb: Subscription<TData>) {
+  subscribe(cb: (data: TData) => void) {
     return this.#publisher.subscribe(cb);
   }
 }
+

@@ -1,12 +1,14 @@
 import { Publisher } from "./Publisher";
 import { Store } from "./Store";
-import { Subscription } from "./Subscription";
 import { TypedMap } from "./TypedMap";
-import { valueof } from "./common/types/valueof";
 
-type StoresForObject<T> = {
-  [P in keyof T]: Store<T[P]>;
+type MapToStores<TData> = {
+  [TKey in keyof TData]: Store<TData[TKey]>;
 };
+
+type FollowerArguments<TData extends Record<PropertyKey, any>> = {
+  [TKey in keyof TData]: [key: TKey, value: TData[TKey]];
+}[keyof TData];
 
 /**
  * Keeps track of multiple different stores of data,
@@ -26,56 +28,42 @@ type StoresForObject<T> = {
  *
  * const client = new Client<BlogInfo>();
  *
- * const unsub = client.subscribe("readers", (people) => {
- *   // do stuff with the `person` array (`people`) here
+ * const unsub = client.subscribe("readers", (readers) => {
+ *   // do stuff with the `readers` array here
  * });
  *
  * // update the internal state for a specifc key and notify all that key's subscribers
  * client.set("readers", [{ name: "Evyatar", age: 19 }]);
  *
- * // get the current state within an array
- * const [people] = client.get("readers");
+ * // get the current state for a specific key
+ * const readers = client.get("readers");
  *
  * // remove the subscriber we set up
  * unsub();
- *
- * // if a key of `TData` is a function
- * type Events = {
- *   load: () => void;
- *   click: (x: number, y: number) => void;
- * }
- *
- * const client = new Client<Events>();
- * // we'll be expected to pass the parameters of that function for that key's setters
- * client.set("click", 10, 20);
- * // and that's also what `subscribe`'s callbacks will get
- * client.subscribe("click", (x, y) => {
- *   // do stuff here...
- * })
- * // and what `get` will return
- * const [x, y] = client.get("click");
  **/
-export class Client<TData> {
-  #stores = new TypedMap<StoresForObject<TData>>();
-  #followers = new Publisher<
-    (
-      key: keyof TData,
-      ...args: Parameters<Subscription<valueof<TData>>>
-    ) => void
-  >();
+export class Client<TData extends Record<PropertyKey, any>> {
+  #stores = new TypedMap<MapToStores<TData>>();
+  #followers = new Publisher<(...args: FollowerArguments<TData>) => void>();
 
   /**
    * Keeps track of multiple different stores of data,
    * and allows subscription and updates to specific stores by key.
    **/
-  constructor() { }
+  constructor(initialValues?: Partial<TData>) {
+    if (!initialValues) return;
+
+    for (let key of Object.getOwnPropertyNames(initialValues)) {
+      const value = initialValues[key];
+      if (value) this.#stores.set(key, new Store(value));
+    }
+  }
 
   /**
    * Get a snapshot of a specific store's current state.
    *
-   * @param key The key of the store to return the data from.
+   * @param key The key to return the data from.
    *
-   * @returns the data currently being held at the store for `key`, **as an array**; an empty array is returned if no data has been set for that key yet.
+   * @returns The data currently being held at the store for `key`, or `undefined` if no data is stored at that key yet.
    *
    * @example
    * type Person = {
@@ -91,23 +79,23 @@ export class Client<TData> {
    *
    * const client = new Client<BlogInfo>();
    *
-   * // `data` will be an empty array
-   * let data = client.get("latestReader");
+   * // `latestReader` will be undefined
+   * let latestReader = client.get("latestReader");
    *
    * client.set("latestReader", { name: "Evyatar", age: 19 });
    *
-   * // `data` will be `[{ name: "Evyatar", age: 19 }]`
+   * // `data` will be `{ name: "Evyatar", age: 19 }`
    * data = client.get();
    **/
   get<TKey extends keyof TData>(key: TKey) {
-    return this.#stores.get(key)?.get() ?? [];
+    return this.#stores.get(key)?.get();
   }
 
   /**
    * Update a specific store's state with new data, and notify all subscribers of that store, along with any followers.
    *
    * @param key The key of the store for which to update the data.
-   * @param args The new data to keep within that store.
+   * @param data The new data to keep within that store.
    *
    * @example
    * type Person = {
@@ -122,10 +110,6 @@ export class Client<TData> {
    * }
    *
    * const client = new Client<BlogInfo>();
-   *
-   * client.subscribe("readers", (people) => {
-   *   // do stuff with the `person` array...
-   * })
    *
    * // these calls will:
    * // a) trigger all subscribers for their keys
@@ -135,19 +119,16 @@ export class Client<TData> {
    * client.set("latestReader", { name: "John", age: 27 });
    * client.set("likes", 10);
    **/
-  set<TKey extends keyof TData>(
-    key: TKey,
-    ...args: Parameters<Subscription<TData[TKey]>>
-  ) {
+  set<TKey extends keyof TData>(key: TKey, data: TData[TKey]) {
     if (this.#stores.has(key)) {
       const store = this.#stores.get(key)!;
-      store.set(...args);
+      store.set(data);
     } else {
-      const store = new Store<TData[TKey]>(...args);
+      const store = new Store<TData[TKey]>(data);
       this.#stores.set(key, store);
     }
 
-    this.#followers.publish(key, ...args);
+    this.#followers.publish(key, data);
   }
 
   /**
@@ -184,7 +165,7 @@ export class Client<TData> {
    **/
   subscribe<TKey extends keyof TData>(
     key: TKey,
-    cb: Subscription<TData[TKey]>
+    cb: (data: TData[TKey]) => void
   ) {
     if (this.#stores.has(key)) {
       const store = this.#stores.get(key)!;
@@ -234,14 +215,7 @@ export class Client<TData> {
    *
    * // from here on, the follower will not be called
    **/
-  follow(
-    cb: Subscription<
-      (
-        key: keyof TData,
-        ...args: Parameters<Subscription<valueof<TData>>>
-      ) => void
-    >
-  ) {
+  follow(cb: (...args: FollowerArguments<TData>) => void) {
     return this.#followers.subscribe(cb);
   }
 }

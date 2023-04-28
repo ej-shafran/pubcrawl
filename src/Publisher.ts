@@ -1,11 +1,6 @@
-import { Subscription } from "./Subscription";
-
 /**
  * Keeps track of subscribers and notifies them whenever necessary (i.e. - when the `publish` method is called).
  * A Publisher does not keep track of the data it has published; see Store for that functionality.
- *
- * If the `TData` type param is a function, the subscribers will expect that function's parameters.
- * Otherwise, they will expect `TData` itself.
  *
  * @example
  * type Person = {
@@ -13,7 +8,7 @@ import { Subscription } from "./Subscription";
  *   age: number;
  * }
  *
- * const publisher = new Publisher<Person>();
+ * const publisher = new Publisher<(person: Person) => void>();
  *
  * const unsub = publisher.subscribe((person) => {
  *   // do stuff with the `person` here
@@ -27,25 +22,13 @@ import { Subscription } from "./Subscription";
  *
  * // clear all subscribers
  * publisher.clear();
- *
- * // if `TData` is a function...
- * const publisher = new Publisher<(person: Person, isCool: boolean) => void>();
- * // we'll be expected to pass the parameters of `TData`
- * publisher.publish({ name: "Evyatar", age: 19 }, true);
- * // and that's also what `subscribe`'s callbacks will get
- * publisher.subscribe((person, isCool) => {
- *   // do stuff here...
- * })
  **/
-export class Publisher<TData> {
-  #subscribers = new Set<Subscription<TData>>();
+export class Publisher<TSub extends (...args: any) => void> {
+  #subscribers = new Set<TSub>();
 
   /**
    * Keeps track of subscribers and notifies them whenever necessary (i.e. - when the `publish` method is called).
    * A Publisher does not keep track of the data it has published; see Store for that functionality.
-   *
-   * If the `TData` type param is a function, the subscribers will expect that function's parameters.
-   * Otherwise, they will expect `TData` itself.
    **/
   constructor() { }
 
@@ -62,7 +45,7 @@ export class Publisher<TData> {
    *   age: number;
    * }
    *
-   * const publisher = new Publisher<Person>();
+   * const publisher = new Publisher<(person: Person) => void>();
    *
    * const unsub = publisher.subscribe((person) => {
    *   console.log(person);
@@ -73,7 +56,7 @@ export class Publisher<TData> {
    * unsub();
    * // but any `publish` calls from here on out will not
    **/
-  subscribe(cb: Subscription<TData>) {
+  subscribe(cb: TSub) {
     this.#subscribers.add(cb);
 
     return () => {
@@ -92,7 +75,7 @@ export class Publisher<TData> {
    *   age: number;
    * }
    *
-   * const publisher = new Publisher<Person>();
+   * const publisher = new Publisher<(person: Person) => void>();
    *
    * publisher.subscribe(console.log);
    *
@@ -100,9 +83,9 @@ export class Publisher<TData> {
    * publisher.publish({ name: "Evyatar", age: 19 });
    * publisher.publish({ name: "Joe", age: 25 });
    **/
-  publish<Params extends Parameters<Subscription<TData>>>(...params: Params) {
+  publish(...params: Parameters<TSub>) {
     this.#subscribers.forEach((cb) => {
-      cb(...params);
+      cb(...params as any[]);
     });
   }
 
@@ -113,3 +96,4 @@ export class Publisher<TData> {
     this.#subscribers.clear();
   }
 }
+
