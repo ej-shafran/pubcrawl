@@ -1,6 +1,6 @@
 {
   "name": "pubhop-src",
-  "version": "0.0.0-029c1406",
+  "version": "1.0.2",
   "description": "A library that simplifies the pub-sub model for TypeScript and JavaScript",
   "main": "index.js",
   "scripts": {
