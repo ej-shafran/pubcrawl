@@ -1,6 +1,6 @@
 {
   "name": "pubhop-src",
-  "version": "1.0.1",
+  "version": "0.0.0-029c1406",
   "description": "A library that simplifies the pub-sub model for TypeScript and JavaScript",
   "main": "index.js",
   "scripts": {
@@ -10,7 +10,8 @@
     "copy": "cp ./package.json ./dist/package.json && cp ./README.md ./dist/README.md && cp ./.npmrc ./dist/.npmrc",
     "postbuild": "npm run copy && npm run change-name",
     "prebuild": "npm run test",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "randomize": "npm pkg set version=0.0.0-$(openssl rand -hex 4)"
   },
   "repository": {
     "type": "git",
