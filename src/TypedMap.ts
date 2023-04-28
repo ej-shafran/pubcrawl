@@ -1,4 +1,6 @@
-import type { valueof } from "./common/types/valueof";
+type Entries<TData> = {
+  [TKey in keyof TData]: [key: TKey, value: TData[TKey]];
+}[keyof TData];
 
 /**
  * A wrapper for the JavaScript `Map` object that adds strong typing;
@@ -58,16 +60,14 @@ export class TypedMap<TData> {
    * Returns an iterable of values in the map
    **/
   values() {
-    return this.#map.values() as IterableIterator<valueof<TData>>;
+    return this.#map.values() as IterableIterator<TData[keyof TData]>;
   }
 
   /**
    * Returns an iterable of key, value pairs for every entry in the map.
    **/
   entries() {
-    return this.#map.entries() as IterableIterator<
-      [keyof TData, valueof<TData>]
-    >;
+    return this.#map.entries() as IterableIterator<Entries<TData>>;
   }
 
   /**

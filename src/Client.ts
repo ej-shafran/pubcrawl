@@ -1,11 +1,14 @@
 import { Publisher } from "./Publisher";
 import { Store } from "./Store";
 import { TypedMap } from "./TypedMap";
-import { valueof } from "./common/types/valueof";
 
-type StoresForObject<T> = {
-  [P in keyof T]: Store<T[P]>;
+type MapToStores<TData> = {
+  [TKey in keyof TData]: Store<TData[TKey]>;
 };
+
+type FollowerArguments<TData extends Record<PropertyKey, any>> = {
+  [TKey in keyof TData]: [key: TKey, value: TData[TKey]];
+}[keyof TData];
 
 /**
  * Keeps track of multiple different stores of data,
@@ -38,11 +41,9 @@ type StoresForObject<T> = {
  * // remove the subscriber we set up
  * unsub();
  **/
-export class Client<TData> {
-  #stores = new TypedMap<StoresForObject<TData>>();
-  #followers = new Publisher<
-    (key: keyof TData, value: valueof<TData>) => void
-  >();
+export class Client<TData extends Record<PropertyKey, any>> {
+  #stores = new TypedMap<MapToStores<TData>>();
+  #followers = new Publisher<(...args: FollowerArguments<TData>) => void>();
 
   /**
    * Keeps track of multiple different stores of data,
@@ -207,7 +208,7 @@ export class Client<TData> {
    *
    * // from here on, the follower will not be called
    **/
-  follow(cb: (key: keyof TData, data: valueof<TData>) => void) {
+  follow(cb: (...args: FollowerArguments<TData>) => void) {
     return this.#followers.subscribe(cb);
   }
 }
