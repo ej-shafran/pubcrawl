@@ -85,7 +85,7 @@ export class Publisher<TSub extends (...args: any) => void> {
    **/
   publish(...params: Parameters<TSub>) {
     this.#subscribers.forEach((cb) => {
-      cb(...params);
+      cb(...params as any[]);
     });
   }
 
@@ -96,3 +96,4 @@ export class Publisher<TSub extends (...args: any) => void> {
     this.#subscribers.clear();
   }
 }
+
