@@ -1,12 +1,17 @@
 import { Publisher } from "./Publisher";
 import { TypedMap } from "./TypedMap";
-import { valueof } from "./common/types/valueof";
 
-type PublishersForObject<
-  T extends Record<PropertyKey, (...args: any[]) => any>
+type MapToPublishers<
+  THandlers extends Record<PropertyKey, (...args: any[]) => any>
 > = {
-    [P in keyof T]: Publisher<T[P]>;
+    [TKey in keyof THandlers]: Publisher<THandlers[TKey]>;
   };
+
+type FollowerArguments<
+  THandlers extends Record<PropertyKey, (...args: any[]) => any>
+> = {
+  [TKey in keyof THandlers]: [key: TKey, ...args: Parameters<THandlers[TKey]>];
+}[keyof THandlers];
 
 /**
  * Keeps track of an associative map of keys to publishers.
@@ -52,10 +57,8 @@ type PublishersForObject<
 export class Network<
   THandlers extends Record<PropertyKey, (...args: any[]) => any>
 > {
-  #publishers = new TypedMap<PublishersForObject<THandlers>>();
-  #followers = new Publisher<
-    (event: keyof THandlers, ...data: Parameters<valueof<THandlers>>) => void
-  >();
+  #publishers = new TypedMap<MapToPublishers<THandlers>>();
+  #followers = new Publisher<(...args: FollowerArguments<THandlers>) => void>();
 
   /**
    * Keeps track of an associative map of keys to publishers.
@@ -183,9 +186,7 @@ export class Network<
    *
    * // from here on, the follower will not be called
    **/
-  follow(
-    cb: (event: keyof THandlers, ...data: Parameters<valueof<THandlers>>) => void
-  ) {
+  follow(cb: (...args: FollowerArguments<THandlers>) => void) {
     return this.#followers.subscribe(cb);
   }
 
