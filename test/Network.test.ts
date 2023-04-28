@@ -1,10 +1,10 @@
 import { Network } from "../src";
 
 type TestingEvents = {
-  "test-a": string;
-  "test-b": number;
-  "test-c": number;
-  "test-d": [string, string];
+  "test-a": (data: string) => void;
+  "test-b": (data: number) => void;
+  "test-c": (data: number) => void;
+  "test-d": (data: [string, string]) => void;
 };
 
 describe("Network", () => {

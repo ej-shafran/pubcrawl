@@ -1,11 +1,12 @@
 import { Publisher } from "./Publisher";
-import { Subscription } from "./Subscription";
 import { TypedMap } from "./TypedMap";
 import { valueof } from "./common/types/valueof";
 
-type PublishersForObject<T> = {
-  [P in keyof T]: Publisher<T[P]>;
-};
+type PublishersForObject<
+  T extends Record<PropertyKey, (...args: any[]) => any>
+> = {
+    [P in keyof T]: Publisher<T[P]>;
+  };
 
 /**
  * Keeps track of an associative map of keys to publishers.
@@ -17,41 +18,44 @@ type PublishersForObject<T> = {
  *   age: number;
  * }
  *
- * type BlogInfo = {
- *   readers: Person[];
- *   latestReader: Person;
- *   likes: number;
+ * type BlogEvents = {
+ *   newReader: (latest: Person, readers: Person[]) => void;
+ *   like: (count: number) => void;
  * }
  *
- * const network = new Network<Person>();
+ * const network = new Network<BlogEvents>();
  *
- * const unsub = network.subscribe("latestReader", (person) => {
- *   // do stuff with the `person` here
+ * const unsub = network.subscribe("newReader", (latest, readers) => {
+ *   // do stuff with `reader` and `readers` here
  * });
  *
  * // call all subscribers with this data
- * network.publish("latestReader", { name: "Evyatar", age: 19 });
+ * network.publish("newReader", { name: "Evyatar", age: 19 }, [{ name: "Evyatar", age: 19 }]);
  *
  * // remove the subscriber we set up
  * unsub();
  *
- * const unfollow = network.follow((key, data) => {
- *   // `key` is any of the keys of `BlogInfo`
- *   // `data` is any of the values of `BlogInfo`
+ * const unfollow = network.follow((event, ...data) => {
+ *   // `key` is `"newReader" | "like"`
+ *   // `data` is either `[Person, Person[]]` or `[number]`
  * })
  *
  * // remove the follower we set up
  * unfollow();
  *
  * // clear all subscribers for a specific key
- * network.clear("readers");
+ * network.clear("newReader");
  *
  * // clear all subscribers along with followers
  * network.fullClear();
  **/
-export class Network<TData> {
-  #publishers = new TypedMap<PublishersForObject<TData>>();
-  #followers = new Publisher<valueof<TData>>();
+export class Network<
+  THandlers extends Record<PropertyKey, (...args: any[]) => any>
+> {
+  #publishers = new TypedMap<PublishersForObject<THandlers>>();
+  #followers = new Publisher<
+    (event: keyof THandlers, ...data: Parameters<valueof<THandlers>>) => void
+  >();
 
   /**
    * Keeps track of an associative map of keys to publishers.
@@ -60,10 +64,10 @@ export class Network<TData> {
   constructor() { }
 
   /**
-   * Add a new subscriber to a specific key.
+   * Add a new subscriber to a specific event.
    *
-   * @param key The specific key, A.K.A "event" or "channel" to subscribe to.
-   * @param cb Will be called whenever new data is published to the channel specified by `key`.
+   * @param event The specific event to subscribe to.
+   * @param cb Will be called whenever new data is published to `event`
    *
    * @returns An `unsubscribe` function that removes this subscriber.
    *
@@ -73,27 +77,28 @@ export class Network<TData> {
    *   age: number;
    * }
    *
-   * type BlogInfo = {
-   *   readers: Person[];
-   *   latestReader: Person;
-   *   likes: number;
+   * type BlogEvents = {
+   *   newReader: (latest: Person, readers: Person[]) => void;
+   *   like: (count: number) => void;
    * }
    *
-   * const network = new Network<BlogInfo>();
+   * const network = new Network<BlogEvents>();
    *
-   * // we subscribe to a specific `key`, or event, that the network will report on
-   * const unsub = network.subscribe("readers", (person) => {
-   *   console.log(person);
+   * // we subscribe to a specific event that the network will report on
+   * const unsub = network.subscribe("newReader", (latest, readers) => {
+   *   console.log(latest);
+   *   //           ^? Person
+   *   console.log(readers);
    *   //           ^? Person[]
    * })
    *
-   * // any `publish` calls to "readers" here will trigger our `console.log`...
+   * // any `publish` calls to "newReader" here will trigger our `console.log`...
    * unsub();
-   * // but any `publish` calls to "readers" from here on out will not
+   * // but any `publish` calls to "newReader" from here on out will not
    **/
-  subscribe<K extends keyof TData>(key: K, cb: Subscription<TData[K]>) {
+  subscribe<K extends keyof THandlers>(key: K, cb: THandlers[K]) {
     if (!this.#publishers.has(key)) {
-      const publisher = new Publisher<TData[K]>();
+      const publisher = new Publisher<THandlers[K]>();
       const unsub = publisher.subscribe(cb);
       this.#publishers.set(key, publisher);
       return unsub;
@@ -104,11 +109,11 @@ export class Network<TData> {
   }
 
   /**
-   * Notify all subscribers to a specific key with some data.
+   * Notify all subscribers to a specific event with some data.
    * Also notifies all followers that are listening to every key.
    *
-   * @param key The specific key, A.K.A "event" or "channel" to publish to.
-   * @param params What to call the subscriber callbacks with (i.e. - the data to notify them of)
+   * @param event The specific event to publish to.
+   * @param params What to call the subscriber callbacks with (i.e. - the data to notify them of).
    *
    * @example
    * type Person = {
@@ -116,31 +121,30 @@ export class Network<TData> {
    *   age: number;
    * }
    *
-   * type BlogInfo = {
-   *   readers: Person[];
-   *   latestReader: Person;
-   *   likes: number;
+   * type BlogEvents = {
+   *   newReader: (latest: Person, readers: Person[]) => void;
+   *   like: (count: number) => void;
    * }
    *
-   * const network = new Network<BlogInfo>();
+   * const network = new Network<BlogEvents>();
    *
-   * network.subscribe("likes", (likes) => {
+   * network.subscribe("like", (count) => {
    *   // do stuff...
    * })
    * network.follow(console.log);
    *
    * // both of these will be logged
-   * network.publish("latestReader", { name: "Evyatar", age: 19 });
+   * network.publish("newReader", { name: "Evyatar", age: 19 }, [{ name: "Evyatar", age: 19 }]);
    * // but only this will trigger our "do stuff" callback
-   * network.publish("likes", 10);
+   * network.publish("like", 10);
    **/
-  publish<K extends keyof TData>(
-    key: K,
-    ...args: Parameters<Subscription<TData[K]>>
+  publish<TEvent extends keyof THandlers>(
+    event: TEvent,
+    ...args: Parameters<THandlers[TEvent]>
   ) {
-    const publisher = this.#publishers.get(key);
+    const publisher = this.#publishers.get(event);
     publisher?.publish(...args);
-    this.#followers.publish(...args);
+    this.#followers.publish(event, ...args);
   }
 
   /**
@@ -156,40 +160,41 @@ export class Network<TData> {
    *   age: number;
    * }
    *
-   * type BlogInfo = {
-   *   readers: Person[];
-   *   latestReader: Person;
-   *   likes: number;
+   * type BlogEvents = {
+   *   newReader: (latest: Person, readers: Person[]) => void;
+   *   like: (count: number) => void;
    * }
    *
-   * const network = new Network<BlogInfo>();
+   * const network = new Network<BlogEvents>();
    *
-   * const unfollow = network.follow((key, data) => {
+   * const unfollow = network.follow((key, ...data) => {
    *   console.log(key);
-   *   //           ^? "readers" | "latestReader" | "likes"
+   *   //           ^? "newReader" | "like"
    *   console.log(data);
-   *   //           ^? Person[] | Person | number
+   *   //           ^? [Person, Person[]] | [number]
    * });
    *
    * // any data published here will trigger the follower,
    * // no matter which key it is publishing to
-   * network.publish("latestReader", { name: "Evyatar", age: 19 });
-   * network.publish("likes", 10);
+   * network.publish("newReader", { name: "Evyatar", age: 19 }, [{ name: "Evyatar", age: 19 }]);
+   * network.publish("like", 10);
    *
    * unfollow();
    *
    * // from here on, the follower will not be called
    **/
-  follow(cb: Subscription<unknown>) {
+  follow(
+    cb: (event: keyof THandlers, ...data: Parameters<valueof<THandlers>>) => void
+  ) {
     return this.#followers.subscribe(cb);
   }
 
   /**
-   * Clear all subscribers for a specific key (A.K.A "channel" or "event")
+   * Clear all subscribers for a specific event.
    *
    * @param key The key to clear the subscribers of.
    **/
-  clear(key: keyof TData) {
+  clear(key: keyof THandlers) {
     this.#publishers.get(key)?.clear();
   }
 
