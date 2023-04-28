@@ -374,3 +374,11 @@ Adds a follower to the client, which is notified of every `set`, regardless of k
 Takes a `cb` parameter, which will be called with the key and the associated data on every `set`.
 
 Returns an `unfollow` function, which removes the function from the list of followers.
+
+### TypedMap
+
+A wrapper for JavaScript's `Map` object that allows strong typing. Used internally by `Network` and `Client`.
+
+The `TypedMap` class has one generic type argument, `TData`, which signifies the key-value pairs of the map.
+
+`TypedMap` has the same API as `Map`, only with stronger types.
