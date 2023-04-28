@@ -14,11 +14,11 @@ describe("Client", () => {
     client.set("test-a", "TESTING");
 
     it("should get the data that exists for that key", () => {
-      expect(client.get("test-a")).toEqual(["TESTING"]);
+      expect(client.get("test-a")).toEqual("TESTING");
     });
 
     it("should return undefined if no data exists yet", () => {
-      expect(client.get("test-b")).toEqual([]);
+      expect(client.get("test-b")).toBeUndefined();
     });
   });
 
@@ -28,15 +28,15 @@ describe("Client", () => {
     client.set("test-b", 10);
 
     it("should create new data if none exists", () => {
-      expect(client.get("test-a")).toEqual([]);
+      expect(client.get("test-a")).toBeUndefined();
       client.set("test-a", "TESTING");
-      expect(client.get("test-a")).toEqual(["TESTING"]);
+      expect(client.get("test-a")).toEqual("TESTING");
     });
 
     it("should update any data that already exists", () => {
-      expect(client.get("test-b")).toEqual([10]);
+      expect(client.get("test-b")).toEqual(10);
       client.set("test-b", 11);
-      expect(client.get("test-b")).toEqual([11]);
+      expect(client.get("test-b")).toEqual(11);
     });
 
     it("should trigger any subscribers", () => {
