@@ -137,4 +137,37 @@ unfollow();
 
 ## API
 
-<!-- TODO -->
+### Publisher
+
+A `Publisher` maintains a list of subscribers which it notifies of any publishes. It does not manage any internal state about the data that has been published, but simply passes the data along to its subscribers.
+
+#### Publisher.subscribe
+
+```typescript
+Publisher<TSub>.subscribe(cb: TSub): () => void;
+```
+
+Adds a new subscriber to the publisher.
+
+Takes a `cb` parameter, which will be called on every `publish`.
+
+Returns an `unsubscribe` function, which removes the function from the list of subscribers.
+
+#### Publisher.publish
+
+```typescript
+Publisher<TSub>.publish(...params: Parameters<TSub>): void;
+```
+
+Notifies all subscribers with the specified data.
+
+Takes `params`, which are passed to each of `Publisher`'s subscribers, in insertion order.
+
+#### Publisher.clear
+
+```typescript
+Publisher<TSub>.clear(): void;
+```
+
+Removes all subscribers from the publisher.
+
