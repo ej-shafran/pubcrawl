@@ -303,11 +303,21 @@ Remove all subscribers and all followers of the network, regardless of events.
 
 ### Client
 
+A `Client` maintains as a collection of stores and their subscribers, along with a collection of followers which listen for updates on every store.
+
+The `Client` class has one generic type argument, `TData`. Each key of `TData` signifies a store's key, while each value signifies the data within that store.
+
+```typescript
+class Client<TData extends Record<PropertyKey, any>>;
+```
+
 #### new Client()
 
 ```typescript
 new Client<TData>(initialValues?: Partial<TData>);
 ```
+
+`Client` can be left empty, or have any of its stores initialized.
 
 #### Client.get
 
