@@ -51,10 +51,10 @@ type BlogEvents = {
   like: (count: number) => void;
 };
 
-const network = new Network<BlogEvents>(); // we now essentially have "readers", "latestReader", and "likes" publishers
+const network = new Network<BlogEvents>(); // we now essentially have "newReader" and "like" publishers
 
 const unsub = network.subscribe("newReader", (latest, readers) => {
-  // this will be called whenever "readers" is published to
+  // this will be called whenever "newReader" is published to
 });
 
 const unfollow = network.follow((...data) => {
