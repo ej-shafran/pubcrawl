@@ -191,7 +191,7 @@ class Store<TData>;
 #### Store() constructor
 
 ```typescript
-new Store<TData>(initialValue?: TData)
+new Store<TData>(initialValue?: TData);
 ```
 
 `Store` can be initialized with a value, or be left empty.
@@ -300,3 +300,67 @@ Network<THandlers>.fullClear(): void;
 ```
 
 Remove all subscribers and all followers of the network, regardless of events.
+
+### Client
+
+#### new Client()
+
+```typescript
+new Client<TData>(initialValues?: Partial<TData>);
+```
+
+#### Client.get
+
+```typescript
+Client<TData>.get<TKey extends keyof TData>(key: TKey): TData[TKey];
+```
+
+Gets a snapshot of a specific store's state.
+
+Takes a `key` parameter which specifies which store to get the data from.
+
+Returns `TData[TKey]` if that store was initialized with data or has had its data set, and `undefined` otherwise.
+
+#### Client.set
+
+```typescript
+Client<TData>.set<TKey extends keyof TData>(
+    key: TKey,
+    data: TData[TKey]
+): void;
+```
+
+Updates a specific store's state, and notifies all of its subscribers.
+
+Takes a `key` parameter, which specifies which store should have its data updated and its subscribers notified.
+Takes a `data` parameter, which will be inserted into that store's state, and which all of its subscribers will be called with.
+
+#### Client.subscribe
+
+```typescript
+Client<TData>.subscribe<TKey extends keyof TData>(
+    key: TKey,
+    cb: (data: TData[TKey]) => void
+): () => void;
+```
+
+Adds a new subscriber to a specific store.
+
+Takes a `key` parameter, which specifies which store's updates to listen for.
+Takes a `cb` parameter, which will be called on every `set` to that store.
+
+Returns an `unsubscribe` function, which removes the function from the list of subscribers.
+
+#### Client.follow
+
+```typescript
+// it should be noted that this type signature is an oversimplification;
+// `Client` uses a mapped type to ensure that `key` and `data` are always synced up.
+Client<TData>.follow(cb: (key: keyof TData, data: TData[keyof TData])): () => void;
+```
+
+Adds a follower to the client, which is notified of every `set`, regardless of key.
+
+Takes a `cb` parameter, which will be called with the key and the associated data on every `set`.
+
+Returns an `unfollow` function, which removes the function from the list of followers.
