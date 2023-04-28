@@ -311,7 +311,7 @@ The `Client` class has one generic type argument, `TData`. Each key of `TData` s
 class Client<TData extends Record<PropertyKey, any>>;
 ```
 
-#### new Client()
+#### Client() constructor
 
 ```typescript
 new Client<TData>(initialValues?: Partial<TData>);
