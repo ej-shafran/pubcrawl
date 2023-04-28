@@ -5,16 +5,18 @@ type TestingData = {
   age: number;
 };
 
+type TestSubscriber = (data: TestingData) => void;
+
 describe("Publisher", () => {
   describe("Publisher#subscribe, Publisher#publish", () => {
     it("should return a callback", () => {
-      const publisher = new Publisher<TestingData>();
+      const publisher = new Publisher<TestSubscriber>();
       const unsub = publisher.subscribe(() => { });
       expect(unsub).toBeInstanceOf(Function);
     });
 
     it("should call the subscriber on each publish", () => {
-      const publisher = new Publisher<TestingData>();
+      const publisher = new Publisher<TestSubscriber>();
       const spy = jest.fn();
 
       publisher.subscribe(spy);
@@ -28,7 +30,7 @@ describe("Publisher", () => {
 
   describe("Publisher#clear", () => {
     it("should remove all subscribers", () => {
-      const publisher = new Publisher<TestingData>();
+      const publisher = new Publisher<TestSubscriber>();
 
       const spy1 = jest.fn();
       const spy2 = jest.fn();
