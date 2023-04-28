@@ -141,6 +141,12 @@ unfollow();
 
 A `Publisher` maintains a list of subscribers which it notifies of any publishes. It does not manage any internal state about the data that has been published, but simply passes the data along to its subscribers.
 
+The `Publisher` class has one generic type argument, `TSub`, which is the type of the subscriber functions. `TSub` must be a function that returns `void`.
+
+```typescript
+class Publisher<TSub extends (...args: any) => void>;
+```
+
 #### Publisher.subscribe
 
 ```typescript
@@ -171,3 +177,53 @@ Publisher<TSub>.clear(): void;
 
 Removes all subscribers from the publisher.
 
+
+### Store
+
+A `Store` maintains a list of subscribers just like a `Publisher`, but also manages an internal state. This state is the determiner of when and with what to notify the subscribers.
+
+The `Store` class has one generic type argument, `TData`, which is the type of the internal state and the parameter for the subscriber functions.
+
+```typescript
+class Store<TData>;
+```
+
+#### Store() constructor
+
+```typescript
+new Store<TData>(initialValue?: TData)
+```
+
+`Store` can be initialized with a value, or be left empty.
+
+#### Store.get
+
+```typescript
+Store<TData>.get(): TData | undefined;
+```
+
+Gets a snapshot of the store's state.
+
+Returns `TData` if the store was initialized with data or has had its data set, and `undefined` otherwise.
+
+#### Store.set
+
+```typescript
+Store<TData>.set(data: TData): void;
+```
+
+Updates the store's state, and notifies all subscribers.
+
+Takes a `data` parameter, which will be inserted into the store's state (accessed by `get`), and which all subscribers will be called with.
+
+#### Store.subscribe
+
+```typescript
+Store<TData>.subscribe(cb: (data: TData) => void): () => void;
+```
+
+Adds a new subscriber to the store.
+
+Takes a `cb` parameter, which will be called on every `set`.
+
+Returns an `unsubscribe` function, which removes the function from the list of subscribers.
