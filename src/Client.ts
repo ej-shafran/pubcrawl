@@ -49,7 +49,14 @@ export class Client<TData extends Record<PropertyKey, any>> {
    * Keeps track of multiple different stores of data,
    * and allows subscription and updates to specific stores by key.
    **/
-  constructor() { }
+  constructor(initialValues?: Partial<TData>) {
+    if (!initialValues) return;
+
+    for (let key of Object.getOwnPropertyNames(initialValues)) {
+      const value = initialValues[key];
+      if (value) this.#stores.set(key, new Store(value));
+    }
+  }
 
   /**
    * Get a snapshot of a specific store's current state.

@@ -111,4 +111,18 @@ describe("Client", () => {
     expect(spy).toHaveBeenCalledWith("test-c", 11);
     expect(spy).toHaveBeenCalledWith("test-d", ["TESTING", "TESTING"]);
   });
+
+  describe("new Client", () => {
+    it("should allow passing initialValues", () => {
+      const client = new Client<TestingData>({
+        "test-a": "TESTING",
+        "test-c": 11,
+      });
+
+      expect(client.get("test-a")).toBe("TESTING");
+      expect(client.get("test-b")).toBeUndefined();
+      expect(client.get("test-c")).toBe(11);
+      expect(client.get("test-d")).toBeUndefined();
+    });
+  });
 });
