@@ -227,3 +227,76 @@ Adds a new subscriber to the store.
 Takes a `cb` parameter, which will be called on every `set`.
 
 Returns an `unsubscribe` function, which removes the function from the list of subscribers.
+
+### Network
+
+A `Network` maintains as a collection of subscribers, each listening for a specific "event", along with a collection of followers, which listen for every update that the network provides. It does not manage any internal state about the data that has been published, but simply passes the data along to its subscribers and followers.
+
+The `Network` class has one generic type argument, `THandlers`. Each key of `THandlers` signifies an event "name" or "key", while each value (which must all be functions that return void) signifies the types of that event's subscribers.
+
+```typescript
+class Network<THandlers extends Record<PropertyKey, (...args: any) => void>>;
+```
+
+#### Network.subscribe
+
+```typescript
+Network<THandlers>.subscribe<TEvent extends keyof THandlers>(
+    event: TEvent,
+    cb: THandlers[TEvent]
+): () => void;
+```
+
+Adds a new subscriber to a specific event within the network.
+
+Takes an `event` parameter, which specifies which of the network's events to listen for.
+Takes a `cb` parameter, which will be called on every `publish` to `event`.
+
+Returns an `unsubscribe` function, which removes the function from the list of subscribers.
+
+#### Network.publish
+
+```typescript
+Network<THandlers>.publish<TEvent extends keyof THandlers>(
+    event: TEvent,
+    ...args: Parameters<THandlers[TEvent]>,
+): void;
+```
+
+Notifies all subscribers of a specific event, along with all of the network's followers, with the specified data.
+
+Takes an `event` parameter, which specifies which event's subscribers should be notified.
+Takes `params`, which are passed to each of `event`'s' subscribers and all of the network's followers, in insertion order.
+
+
+#### Network.follow
+
+```typescript
+// it should be noted that this type signature is an oversimplification;
+// `Network` uses a mapped type to ensure that `event` and `...data` are always synced up.
+Network<THandlers>.follow(cb: (event: keyof THandlers, ...data: THandlers[typeof event])): () => void
+```
+
+Adds a follower to the network, which is notified of every `publish`, regardless of key.
+
+Takes a `cb` parameter, which will be called with the event's name and the associated data on every `publish`.
+
+Returns an `unfollow` function, which removes the function from the list of followers.
+
+#### Network.clear
+
+```typescript
+Network<THandlers>.clear(event: keyof THandlers): void;
+```
+
+Removes all subscribers for a specific event.
+
+Takes an `event` parameter, which determines which subscribers to remove.
+
+#### Network.fullClear
+
+```typescript
+Network<THandlers>.fullClear(): void;
+```
+
+Remove all subscribers and all followers of the network, regardless of events.
