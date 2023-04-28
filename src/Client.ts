@@ -54,7 +54,7 @@ export class Client<TData extends Record<PropertyKey, any>> {
 
     for (let key of Object.getOwnPropertyNames(initialValues)) {
       const value = initialValues[key];
-      if (value) this.#stores.set(key, new Store(value));
+      if (value !== undefined) this.#stores.set(key, new Store(value));
     }
   }
 
