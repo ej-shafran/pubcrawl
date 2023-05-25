@@ -11,7 +11,8 @@
     "postbuild": "npm run copy && npm run change-name",
     "prebuild": "npm run test",
     "test:watch": "jest --watch",
-    "randomize": "npm pkg set version=0.0.0-$(openssl rand -hex 4)"
+    "randomize": "npm pkg set version=0.0.0-$(openssl rand -hex 4)",
+    "prepare": "npx husky install"
   },
   "repository": {
     "type": "git",
@@ -33,6 +34,7 @@
   "homepage": "https://github.com/ej-shafran/pubcrawl#readme",
   "devDependencies": {
     "@types/jest": "^29.5.0",
+    "husky": "^8.0.3",
     "jest": "^29.5.0",
     "rimraf": "^5.0.0",
     "ts-jest": "^29.1.0",
